@@ -12,9 +12,11 @@ import win32gui
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
+import csv
+
 def main(n_copy, path) -> None:
-    #n_copy = 3
-    #path = r'C:\Users\Pavel\Desktop\elevate_in\TEST\K21'
+    #n_copy=3
+    #path=r'C:\Users\Pavel\Desktop\elevate_in\TEST\K21'
 
     file = os.listdir(path)
     n_copy = int(n_copy)
@@ -28,6 +30,8 @@ def main(n_copy, path) -> None:
         file = os.listdir(path)
         modify_handling_capacity(path + '\\' + file[i-1], i)
     
+    get_area(path)
+
     os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
     time.sleep(3.0)
     py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
@@ -47,32 +51,27 @@ def main(n_copy, path) -> None:
     keyboard.press_and_release('enter')
 
 def print_repot(path) -> None:
-    #os.startfile(path + '\\' + 'batch_results.csv')
         
     excel_app = win32com.client.Dispatch("Excel.Application")
     #excel_app.WindowState = -4137
     excel_app.Visible = True
 
     workbook = excel_app.Workbooks.Open(path + '\\' + 'batch_results.csv')
-    #time.sleep(1.0)
     win32gui.SetForegroundWindow(excel_app.Hwnd) 
 
     workbook.RefreshAll()
     excel_app.CalculateUntilAsyncQueriesDone()
 
-    #excel_app.AutomationSecurity = 1
-
     keyboard.press_and_release('alt + c')
     keyboard.press_and_release('left arrow')
     keyboard.press_and_release('tab')
     keyboard.press_and_release('enter')
-
-    #time.sleep(0.1)
     
     keyboard.press_and_release('left arrow')
     keyboard.press_and_release('enter')
 
 def modify_handling_capacity(xml_file, new_capacity):
+
      # Parse the XML file
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -98,6 +97,37 @@ def modify_handling_capacity(xml_file, new_capacity):
     
     with open(xml_file, 'w', encoding='utf-8') as f:
         f.write(pretty_xml)
+
+def get_area(path) -> None:
+
+    xml_file = path + '\\' + os.listdir(path)[0]
+    csv_file = os.path.join(path, 'floor_area.csv')
+
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    data = []
+
+    # Find FloorArea in ElevatorData/Advanced/Configuration/Car
+    data_cars = root.findall('.//ElevatorData/Advanced/Configuration/Car')
+    if data_cars is not None:
+        for data_car in data_cars:
+            car_id = data_car.get('Id')
+            floor_area = data_car.get('FloorAreaM2')
+
+            data.append({
+                'CarId' : car_id,
+                'FloorAreaM2' : floor_area
+            })
+
+    # Write CSV
+    if data:
+        fieldnames = ['CarId', 'FloorAreaM2']
+
+        with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+            writer.writeheader()
+            writer.writerows(data)
 
 if __name__ == '__main__':
     main()
