@@ -12,3 +12,4 @@ wheels/
 .vscode
 
 elevate-helper-v1.12.spec
+pyinstaller.bat

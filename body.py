@@ -84,7 +84,6 @@ def modify_handling_capacity(xml_file, new_capacity):
     
     with open(xml_file, 'w', encoding='utf-8') as f:
         f.write(pretty_xml)
-    print("Modified handling capacity")
 
 def modify_buildingtype_office(xml_file, peak) -> None:
     tree = ET.parse(xml_file)
@@ -111,7 +110,6 @@ def modify_buildingtype_office(xml_file, peak) -> None:
     
     with open(xml_file, 'w', encoding='utf-8') as f:
         f.write(pretty_xml)
-    print('Modifying building type to:', peak) 
 
 def modify_buildingtype_residence(xml_file, buildingtype) -> None:
     tree = ET.parse(xml_file)
@@ -130,8 +128,27 @@ def modify_buildingtype_residence(xml_file, buildingtype) -> None:
     pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
     
     with open(xml_file, 'w', encoding='utf-8') as f:
+        f.write(pretty_xml) 
+
+def modifytitle(xml_file,peak) -> None:
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    data_job = root.find('.//JobData')
+    print("found jobdata", data_job)
+    if data_job is not None:
+        if peak == 'Lunch':
+            mod_data_job = str(data_job.get('JobTitle')) + " (обеденный пик)"
+        else:
+             mod_data_job = str(data_job.get('JobTitle')) + " (утренний пик)"
+        data_job.set('JobTitle', mod_data_job)
+
+
+    xml_str = ET.tostring(root, encoding='utf-8')
+    pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
+    
+    with open(xml_file, 'w', encoding='utf-8') as f:
         f.write(pretty_xml)
-    print('Modifying building type to:', buildingtype)    
 
 def get_area(path) -> None:
 
@@ -164,7 +181,7 @@ def get_area(path) -> None:
             writer.writeheader()
             writer.writerows(data)
 
-def resedence(path) -> None:
+def resedencerun(path) -> None:
     os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
     time.sleep(3.0)
     py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
@@ -185,7 +202,7 @@ def resedence(path) -> None:
     keyboard.press_and_release('enter')
     print("Residence launched")
 
-def office(path) -> None:
+def officerun(path) -> None:
     os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
     time.sleep(3.0)
     py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
@@ -204,9 +221,8 @@ def office(path) -> None:
     #keyboard.press_and_release('ctrl + v')
     keyboard.write(path + '\\' + 'morning')
     keyboard.press_and_release('enter')
-    time.sleep(3.0)
     print("Morning launched")
-    time.sleep(3.0)
+    time.sleep(0.5)
     py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
     keyboard.press_and_release('alt + a')
     keyboard.press_and_release('down arrow')
@@ -238,7 +254,7 @@ def makecopiesandrun(buildingtype, path, n_copy) -> None:
             modify_handling_capacity(path + '\\' + file[i-1], i)
             modify_buildingtype_residence(path + '\\' + file[i-1],buildingtype)  
             print('Modified')
-        resedence(path)
+        resedencerun(path)
     elif buildingtype == 'Office':
         morningpath = path + '\\' + 'morning'
         lunchpath = path + '\\' + 'lunch'
@@ -247,24 +263,24 @@ def makecopiesandrun(buildingtype, path, n_copy) -> None:
         shutil.copyfile(path + '\\' + file[0], morningpath + '\\' + file[0])
         shutil.copyfile(path + '\\' + file[0], lunchpath + '\\' + file[0])
         print("Copied files to folders")
+        modify_buildingtype_office(morningpath + '\\' + file[0],'Morning') 
+        modifytitle(morningpath + '\\' + file[0],"Morning")
+        modify_buildingtype_office(lunchpath + '\\' + file[0],'Lunch')  
+        modifytitle(lunchpath + '\\' + file[0],"Lunch")
         for i in range(2, n_copy + 1):
             if i < 10:
                 shutil.copyfile(morningpath + '\\' + file[0], morningpath + '\\' + file[0][:-6] + str(i) + '.elvx')
-            else:
-                shutil.copyfile(morningpath + '\\' + file[0], morningpath + '\\' + file[0][:-7] + str(i) + '.elvx')
-            file = os.listdir(morningpath)
-            modify_handling_capacity(morningpath + '\\' + file[i-1], i)
-            modify_buildingtype_office(morningpath + '\\' + file[i-1],'Morning') 
-
-            if i < 10:
                 shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-6] + str(i) + '.elvx')
             else:
+                shutil.copyfile(morningpath + '\\' + file[0], morningpath + '\\' + file[0][:-7] + str(i) + '.elvx')
                 shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-7] + str(i) + '.elvx')
+            file = os.listdir(morningpath)
+            modify_handling_capacity(morningpath + '\\' + file[i-1], i)
             file = os.listdir(lunchpath)
             modify_handling_capacity(lunchpath + '\\' + file[i-1], i) 
-            modify_buildingtype_office(lunchpath + '\\' + file[i-1],'Lunch')  
+
             print('Modified')
-        office(path) 
+        officerun(path) 
     else:
         print('Unknown building type')
 
