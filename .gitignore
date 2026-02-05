@@ -10,3 +10,5 @@ wheels/
 .venv
 
 .vscode
+
+elevate-helper-v1.12.spec
