@@ -1,10 +1,12 @@
 import tkinter 
 import body
 import app_icon
-buildingtype = ""
 n_copy = 0
+buildingtype = ""
+
 def button_click(buildingtype) -> None:
     path = path_entry.get()
+    global n_copy
     try:
         body.main(n_copy, path, buildingtype)
     except:
@@ -12,24 +14,45 @@ def button_click(buildingtype) -> None:
 
 def print_report() -> None:
     path = path_entry.get()
-
     try:
-        body.print_repot(path)
+        body.print_report(path)
+    except:
+        error_state_val.set('NOT OK!')
+
+def print_report_morning() -> None:
+    path = path_entry.get()
+    try:
+        body.print_report(path + '//' + 'morning')
+    except:
+        error_state_val.set('NOT OK!')
+
+def print_report_lunch() -> None:
+    path = path_entry.get()
+    try:
+        body.print_report(path + '//' + 'lunch')
     except:
         error_state_val.set('NOT OK!')
 
 def choosetype(type) -> None:
-    global buildingtype
     global n_copy
+    global buildingtype
     buildingtype = type
     if type == 'Office':
         office_button.select()
         residence_button.deselect()
         n_copy = 13
+        report_button.grid_forget()
+        report_button_morning.grid(column=0, row=1, padx=(10, 5), pady=5, sticky='news', columnspan=1)
+        report_button_lunch.grid(column=1, row=1, padx=(5, 10), pady=5, sticky='news', columnspan=1)
+
     elif type == 'Residence':
         residence_button.select()
         office_button.deselect()
         n_copy = 7
+        report_button_morning.grid_forget()
+        report_button_lunch.grid_forget()
+        report_button.grid(column=0, row=1, columnspan=2, padx=10, pady=5, ipadx=70, sticky='news')
+
 
 
 
@@ -93,7 +116,8 @@ exit_button.grid(column=1, row=0, padx=(5, 10), pady=5, sticky='news', columnspa
 
 
 report_button = tkinter.Button(frame_2, text='Print report', command=print_report, padx=5, pady=5)
-report_button.grid(column=0, row=1, columnspan=2, padx=10, pady=5, ipadx=70, sticky='news')
+report_button_morning = tkinter.Button(frame_2, text='Print morning report', command=print_report_morning, padx=5, pady=5)
+report_button_lunch = tkinter.Button(frame_2, text='Print lunch report', command=print_report_lunch, padx=5, pady=5)
 
 frame_4 = tkinter.LabelFrame(root)
 frame_4.pack(padx=10, pady=10, fill='both', expand=True)

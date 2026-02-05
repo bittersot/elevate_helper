@@ -16,16 +16,28 @@ import csv
 
 def main(n_copy, path, buildingtype) -> None:
     #n_copy=3
-    #path=r'C:\Users\Pavel\Desktop\elevate_in\TEST\K21'
-
+    #path = r'C:\Users\ALesnichiy\Desktop\elevate\testele'
+    print(path)
     n_copy = int(n_copy)
-    get_area(path)
-    makecopiesandrun(buildingtype, path, n_copy) 
-
+    try:
+        makecopiesandrun(buildingtype, path, n_copy) 
+    except:
+        print("Error in makecopiesandrun")
+    if buildingtype == "Office":
+        try:
+            get_area(path + "//" + "lunch")
+            get_area(path + "//" + "morning")
+        except:
+            print("Error in get_area")
+    else:
+        try:
+            get_area(path)
+        except:
+            print("Error in get_area")
     
 
 
-def print_repot(path) -> None:
+def print_report(path) -> None:
         
     excel_app = win32com.client.Dispatch("Excel.Application")
     #excel_app.WindowState = -4137
@@ -72,23 +84,54 @@ def modify_handling_capacity(xml_file, new_capacity):
     
     with open(xml_file, 'w', encoding='utf-8') as f:
         f.write(pretty_xml)
+    print("Modified handling capacity")
 
-def modify_buildingtype(xml_file, buildingtype) -> None:
-    # tree = ET.parse(xml_file)
-    # root = tree.getroot()
+def modify_buildingtype_office(xml_file, peak) -> None:
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
 
-    # data_config = root.find('.//ElevatorData/Advanced/Configuration')
-    # if data_config is not None:
-    #     building_type = data_config.find('BuildingType')
-    #     if building_type is not None:
-    #         building_type.text = buildingtype
+    data_traffic = root.find('.//PassengerData/Traffic')
+    if data_traffic is not None:
+        data_periods = data_traffic.findall('Period')
+        for data_period in data_periods:
+            if data_period.get('Id') == '0':
+                if peak == 'Morning':
+                    data_period.set('SplitUp', "100")
+                    data_period.set('SplitDown',"0")
+                    data_period.set('SplitInterfloor',"0")
+                elif peak == 'Lunch':
+                    data_period.set('SplitUp', "45")
+                    data_period.set('SplitDown',"45")
+                    data_period.set('SplitInterfloor',"10")
+                else: 
+                    print('Unknown peak')
 
-    # xml_str = ET.tostring(root, encoding='utf-8')
-    # pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
+    xml_str = ET.tostring(root, encoding='utf-8')
+    pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
     
-    # with open(xml_file, 'w', encoding='utf-8') as f:
-    #     f.write(pretty_xml)
-    print('Modifying building type to:', buildingtype)
+    with open(xml_file, 'w', encoding='utf-8') as f:
+        f.write(pretty_xml)
+    print('Modifying building type to:', peak) 
+
+def modify_buildingtype_residence(xml_file, buildingtype) -> None:
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    data_traffic = root.find('.//PassengerData/Traffic')
+    if data_traffic is not None:
+        data_periods = data_traffic.findall('Period')
+        for data_period in data_periods:
+            if data_period.get('Id') == '0':
+                data_period.set('SplitUp',"50")
+                data_period.set('SplitDown',"50")
+                data_period.set('SplitInterfloor',"0")
+
+    xml_str = ET.tostring(root, encoding='utf-8')
+    pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
+    
+    with open(xml_file, 'w', encoding='utf-8') as f:
+        f.write(pretty_xml)
+    print('Modifying building type to:', buildingtype)    
 
 def get_area(path) -> None:
 
@@ -112,7 +155,7 @@ def get_area(path) -> None:
                 'FloorAreaM2' : floor_area
             })
 
-    # Write CSV
+    #Write CSV
     if data:
         fieldnames = ['CarId', 'FloorAreaM2']
 
@@ -140,12 +183,15 @@ def resedence(path) -> None:
     #keyboard.press_and_release('ctrl + v')
     keyboard.write(path)
     keyboard.press_and_release('enter')
+    print("Residence launched")
 
 def office(path) -> None:
     os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
     time.sleep(3.0)
     py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
     keyboard.press_and_release('alt + a')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
     keyboard.press_and_release('down arrow')
     keyboard.press_and_release('down arrow')
     keyboard.press_and_release('down arrow')
@@ -158,10 +204,13 @@ def office(path) -> None:
     #keyboard.press_and_release('ctrl + v')
     keyboard.write(path + '\\' + 'morning')
     keyboard.press_and_release('enter')
-    os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
+    time.sleep(3.0)
+    print("Morning launched")
     time.sleep(3.0)
     py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
     keyboard.press_and_release('alt + a')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
     keyboard.press_and_release('down arrow')
     keyboard.press_and_release('down arrow')
     keyboard.press_and_release('down arrow')
@@ -174,10 +223,11 @@ def office(path) -> None:
     #keyboard.press_and_release('ctrl + v')
     keyboard.write(path + '\\' + 'lunch')
     keyboard.press_and_release('enter')
+    print("Lunch launched")
 
 def makecopiesandrun(buildingtype, path, n_copy) -> None:
     file = os.listdir(path)
-    if buildingtype == 'resedence':
+    if buildingtype == 'Residence':
         for i in range(2, n_copy + 1):
             if i < 10:
                 shutil.copyfile(path + '\\' + file[0], path + '\\' + file[0][:-6] + str(i) + '.elvx')
@@ -186,15 +236,17 @@ def makecopiesandrun(buildingtype, path, n_copy) -> None:
        
             file = os.listdir(path)
             modify_handling_capacity(path + '\\' + file[i-1], i)
-            modify_buildingtype(path + '\\' + file[i-1],buildingtype)  
+            modify_buildingtype_residence(path + '\\' + file[i-1],buildingtype)  
+            print('Modified')
         resedence(path)
-    elif buildingtype == 'office':
+    elif buildingtype == 'Office':
         morningpath = path + '\\' + 'morning'
         lunchpath = path + '\\' + 'lunch'
         os.makedirs(morningpath)
         os.makedirs(lunchpath)
         shutil.copyfile(path + '\\' + file[0], morningpath + '\\' + file[0])
         shutil.copyfile(path + '\\' + file[0], lunchpath + '\\' + file[0])
+        print("Copied files to folders")
         for i in range(2, n_copy + 1):
             if i < 10:
                 shutil.copyfile(morningpath + '\\' + file[0], morningpath + '\\' + file[0][:-6] + str(i) + '.elvx')
@@ -202,14 +254,16 @@ def makecopiesandrun(buildingtype, path, n_copy) -> None:
                 shutil.copyfile(morningpath + '\\' + file[0], morningpath + '\\' + file[0][:-7] + str(i) + '.elvx')
             file = os.listdir(morningpath)
             modify_handling_capacity(morningpath + '\\' + file[i-1], i)
-     
+            modify_buildingtype_office(morningpath + '\\' + file[i-1],'Morning') 
+
             if i < 10:
                 shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-6] + str(i) + '.elvx')
             else:
                 shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-7] + str(i) + '.elvx')
             file = os.listdir(lunchpath)
             modify_handling_capacity(lunchpath + '\\' + file[i-1], i) 
-            modify_buildingtype(lunchpath + '\\' + file[i-1],buildingtype)  
+            modify_buildingtype_office(lunchpath + '\\' + file[i-1],'Lunch')  
+            print('Modified')
         office(path) 
     else:
         print('Unknown building type')
