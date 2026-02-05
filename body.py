@@ -14,18 +14,19 @@ from xml.dom import minidom
 
 import csv
 
-def main(n_copy, path, buildingtype) -> None:
+def main(n_copy, path, buildingtype, morningflag) -> None:
     #n_copy=3
     #path = r'C:\Users\ALesnichiy\Desktop\elevate\testele'
     print(path)
     n_copy = int(n_copy)
     try:
-        makecopiesandrun(buildingtype, path, n_copy) 
+        makecopiesandrun(buildingtype, path, n_copy,morningflag) 
     except:
         print("Error in makecopiesandrun")
     if buildingtype == "Office":
         try:
-            get_area(path + "//" + "lunch")
+            if morningflag == 1:
+                get_area(path + "//" + "lunch")
             get_area(path + "//" + "morning")
         except:
             print("Error in get_area")
@@ -135,7 +136,6 @@ def modifytitle(xml_file,peak) -> None:
     root = tree.getroot()
 
     data_job = root.find('.//JobData')
-    print("found jobdata", data_job)
     if data_job is not None:
         if peak == 'Lunch':
             mod_data_job = str(data_job.get('JobTitle')) + " (обеденный пик)"
@@ -183,7 +183,7 @@ def get_area(path) -> None:
 
 def resedencerun(path) -> None:
     os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
-    time.sleep(3.0)
+    time.sleep(1.5)
     py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
     keyboard.press_and_release('alt + a')
     keyboard.press_and_release('down arrow')
@@ -202,9 +202,9 @@ def resedencerun(path) -> None:
     keyboard.press_and_release('enter')
     print("Residence launched")
 
-def officerun(path) -> None:
+def officerun(path,morningflag) -> None:
     os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
-    time.sleep(3.0)
+    time.sleep(1.5)
     py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
     keyboard.press_and_release('alt + a')
     keyboard.press_and_release('down arrow')
@@ -222,27 +222,30 @@ def officerun(path) -> None:
     keyboard.write(path + '\\' + 'morning')
     keyboard.press_and_release('enter')
     print("Morning launched")
-    time.sleep(0.5)
-    py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
-    keyboard.press_and_release('alt + a')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('enter')
-    time.sleep(0.5)
-    keyboard.press_and_release('tab')
-    keyboard.press_and_release('tab')
-    keyboard.press_and_release('tab')
-    time.sleep(0.5)
-    #keyboard.press_and_release('ctrl + v')
-    keyboard.write(path + '\\' + 'lunch')
-    keyboard.press_and_release('enter')
-    print("Lunch launched")
+    if morningflag == 1:
+        time.sleep(1.5)
+        py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
+        keyboard.press_and_release('alt + a')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('enter')
+        time.sleep(0.5)
+        keyboard.press_and_release('tab')
+        keyboard.press_and_release('tab')
+        keyboard.press_and_release('tab')
+        time.sleep(0.5)
+        #keyboard.press_and_release('ctrl + v')
+        keyboard.write(path + '\\' + 'lunch')
+        keyboard.press_and_release('enter')
+        print("Lunch launched")
 
-def makecopiesandrun(buildingtype, path, n_copy) -> None:
+def makecopiesandrun(buildingtype, path, n_copy, morningflag) -> None:
     file = os.listdir(path)
+    lunchpath = ''
+    morningpath = ''
     if buildingtype == 'Residence':
         for i in range(2, n_copy + 1):
             if i < 10:
@@ -253,34 +256,34 @@ def makecopiesandrun(buildingtype, path, n_copy) -> None:
             file = os.listdir(path)
             modify_handling_capacity(path + '\\' + file[i-1], i)
             modify_buildingtype_residence(path + '\\' + file[i-1],buildingtype)  
-            print('Modified')
         resedencerun(path)
     elif buildingtype == 'Office':
         morningpath = path + '\\' + 'morning'
-        lunchpath = path + '\\' + 'lunch'
         os.makedirs(morningpath)
-        os.makedirs(lunchpath)
         shutil.copyfile(path + '\\' + file[0], morningpath + '\\' + file[0])
-        shutil.copyfile(path + '\\' + file[0], lunchpath + '\\' + file[0])
-        print("Copied files to folders")
+        if morningflag == 1:
+            lunchpath = path + '\\' + 'lunch'
+            os.makedirs(lunchpath)
+            shutil.copyfile(path + '\\' + file[0], lunchpath + '\\' + file[0])
+            modify_buildingtype_office(lunchpath + '\\' + file[0],'Lunch')  
+            modifytitle(lunchpath + '\\' + file[0],"Lunch")
         modify_buildingtype_office(morningpath + '\\' + file[0],'Morning') 
         modifytitle(morningpath + '\\' + file[0],"Morning")
-        modify_buildingtype_office(lunchpath + '\\' + file[0],'Lunch')  
-        modifytitle(lunchpath + '\\' + file[0],"Lunch")
         for i in range(2, n_copy + 1):
             if i < 10:
                 shutil.copyfile(morningpath + '\\' + file[0], morningpath + '\\' + file[0][:-6] + str(i) + '.elvx')
-                shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-6] + str(i) + '.elvx')
+                if morningflag == 1:
+                    shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-6] + str(i) + '.elvx')
             else:
                 shutil.copyfile(morningpath + '\\' + file[0], morningpath + '\\' + file[0][:-7] + str(i) + '.elvx')
-                shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-7] + str(i) + '.elvx')
+                if morningflag == 1:
+                    shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-7] + str(i) + '.elvx')
             file = os.listdir(morningpath)
             modify_handling_capacity(morningpath + '\\' + file[i-1], i)
-            file = os.listdir(lunchpath)
-            modify_handling_capacity(lunchpath + '\\' + file[i-1], i) 
-
-            print('Modified')
-        officerun(path) 
+            if morningflag == 1:
+                file = os.listdir(lunchpath)
+                modify_handling_capacity(lunchpath + '\\' + file[i-1], i) 
+        officerun(path,morningflag) 
     else:
         print('Unknown building type')
 

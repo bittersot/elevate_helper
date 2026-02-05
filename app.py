@@ -4,11 +4,11 @@ import app_icon
 n_copy = 0
 buildingtype = ""
 
-def button_click(buildingtype) -> None:
+def button_click(buildingtype,morningflag) -> None:
     path = path_entry.get()
     global n_copy
     try:
-        body.main(n_copy, path, buildingtype)
+        body.main(n_copy, path, buildingtype, morningflag)
     except:
         error_state_val.set('NOT OK!')
 
@@ -42,16 +42,17 @@ def choosetype(type) -> None:
         residence_button.deselect()
         n_copy = 13
         report_button.grid_forget()
-        report_button_morning.grid(column=0, row=1, padx=(10, 5), pady=5, sticky='news', columnspan=1)
-        report_button_lunch.grid(column=1, row=1, padx=(5, 10), pady=5, sticky='news', columnspan=1)
-
+        report_button_morning.grid(column=0, row=1, padx=(10, 5), pady=5, sticky='news', columnspan=2)
+        report_button_lunch.grid(column=2, row=1, padx=(5, 10), pady=5, sticky='news', columnspan=2)
+        run_morning.grid(column=1, row=0, padx=(10, 5), pady=5, sticky='news', columnspan=1)
     elif type == 'Residence':
         residence_button.select()
         office_button.deselect()
         n_copy = 7
         report_button_morning.grid_forget()
         report_button_lunch.grid_forget()
-        report_button.grid(column=0, row=1, columnspan=2, padx=10, pady=5, ipadx=70, sticky='news')
+        report_button.grid(column=0, row=1, columnspan=4, padx=10, pady=5, ipadx=70, sticky='news')
+        run_morning.grid_forget()
 
 
 
@@ -92,10 +93,10 @@ frame_3.rowconfigure(1, weight=1)
 frame_3.columnconfigure(0, weight=1)
 frame_3.columnconfigure(1, weight=1)
 
-office_button = tkinter.Checkbutton(frame_3, text='Office', command=lambda: choosetype('Office'), padx=37, pady=5)
+office_button = tkinter.Checkbutton(frame_3, text='Office', command=lambda: choosetype('Office'), padx=37, pady=5,cursor="hand2")
 office_button.grid(column=0, row=0, padx=(10, 5), pady=5, sticky='news', columnspan=1)
 
-residence_button = tkinter.Checkbutton(frame_3, text='Residence', command=lambda: choosetype('Residence'), padx=37, pady=5)
+residence_button = tkinter.Checkbutton(frame_3, text='Residence', command=lambda: choosetype('Residence'), padx=37, pady=5,cursor="hand2")
 residence_button.grid(column=1, row=0, padx=(5, 10), pady=5, sticky='news', columnspan=1)
 
 
@@ -107,17 +108,20 @@ frame_2.rowconfigure(0, weight=1)
 frame_2.rowconfigure(1, weight=1)
 frame_2.columnconfigure(0, weight=1)
 frame_2.columnconfigure(1, weight=1)
+frame_2.columnconfigure(2, weight=1)
+frame_2.columnconfigure(3, weight=1)
 
-run_button = tkinter.Button(frame_2, text='Run', command=lambda: button_click(buildingtype), padx=37, pady=5)
+run_button = tkinter.Button(frame_2, text='Run', command=lambda: button_click(buildingtype,1), padx=10, pady=5,cursor="hand2")
 run_button.grid(column=0, row=0, padx=(10, 5), pady=5, sticky='news', columnspan=1)
+run_morning=tkinter.Button(frame_2, text='Run \n morning \n only', command=lambda: button_click(buildingtype,0), padx=0, pady=5,cursor="hand2")
 
-exit_button = tkinter.Button(frame_2, text='Exit', command=root.destroy, padx=37, pady=5)
-exit_button.grid(column=1, row=0, padx=(5, 10), pady=5, sticky='news', columnspan=1)
+exit_button = tkinter.Button(frame_2, text='Exit', command=root.destroy, padx=10, pady=5,cursor="hand2")
+exit_button.grid(column=2, row=0, padx=(5, 10), pady=5, sticky='news', columnspan=2)
 
 
-report_button = tkinter.Button(frame_2, text='Print report', command=print_report, padx=5, pady=5)
-report_button_morning = tkinter.Button(frame_2, text='Print morning report', command=print_report_morning, padx=5, pady=5)
-report_button_lunch = tkinter.Button(frame_2, text='Print lunch report', command=print_report_lunch, padx=5, pady=5)
+report_button = tkinter.Button(frame_2, text='Print report', command=print_report, padx=5, pady=5,cursor="hand2")
+report_button_morning = tkinter.Button(frame_2, text='Print morning report', command=print_report_morning, padx=5, pady=5,cursor="hand2")
+report_button_lunch = tkinter.Button(frame_2, text='Print lunch report', command=print_report_lunch, padx=5, pady=5,cursor="hand2")
 
 frame_4 = tkinter.LabelFrame(root)
 frame_4.pack(padx=10, pady=10, fill='both', expand=True)
