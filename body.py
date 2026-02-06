@@ -246,17 +246,18 @@ def makecopiesandrun(buildingtype, path, n_copy, morningflag) -> None:
     file = os.listdir(path)
     lunchpath = ''
     morningpath = ''
-    if buildingtype == 'Residence':
+    
+    if buildingtype == 'Residence' or buildingtype == 'Hotel':
+        modify_buildingtype_residence(path + '\\' + file[0],buildingtype) 
         for i in range(2, n_copy + 1):
             if i < 10:
                 shutil.copyfile(path + '\\' + file[0], path + '\\' + file[0][:-6] + str(i) + '.elvx')
             else:
                 shutil.copyfile(path + '\\' + file[0], path + '\\' + file[0][:-7] + str(i) + '.elvx')
-       
             file = os.listdir(path)
             modify_handling_capacity(path + '\\' + file[i-1], i)
-            modify_buildingtype_residence(path + '\\' + file[i-1],buildingtype)  
         resedencerun(path)
+
     elif buildingtype == 'Office':
         morningpath = path + '\\' + 'morning'
         os.makedirs(morningpath)
@@ -284,6 +285,7 @@ def makecopiesandrun(buildingtype, path, n_copy, morningflag) -> None:
                 file = os.listdir(lunchpath)
                 modify_handling_capacity(lunchpath + '\\' + file[i-1], i) 
         officerun(path,morningflag) 
+
     else:
         print('Unknown building type')
 

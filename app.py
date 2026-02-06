@@ -40,21 +40,33 @@ def choosetype(type) -> None:
     if type == 'Office':
         office_button.select()
         residence_button.deselect()
+        hotel_button.deselect()
         n_copy = 13
         report_button.grid_forget()
         report_button_morning.grid(column=0, row=1, padx=(10, 5), pady=5, sticky='news', columnspan=2)
         report_button_lunch.grid(column=2, row=1, padx=(5, 10), pady=5, sticky='news', columnspan=2)
         run_morning.grid(column=1, row=0, padx=(10, 5), pady=5, sticky='news', columnspan=1)
+        run_button.grid(columnspan = 1)
     elif type == 'Residence':
         residence_button.select()
         office_button.deselect()
+        hotel_button.deselect()
         n_copy = 7
         report_button_morning.grid_forget()
         report_button_lunch.grid_forget()
         report_button.grid(column=0, row=1, columnspan=4, padx=10, pady=5, ipadx=70, sticky='news')
         run_morning.grid_forget()
-
-
+        run_button.grid(columnspan = 2)
+    elif type == 'Hotel':
+        hotel_button.select()
+        office_button.deselect()
+        residence_button.deselect()
+        n_copy = 13
+        report_button_morning.grid_forget()
+        report_button_lunch.grid_forget()
+        report_button.grid(column=0, row=1, columnspan=4, padx=10, pady=5, ipadx=70, sticky='news')
+        run_morning.grid_forget()
+        run_button.grid(columnspan = 2)
 
 
 icon = app_icon.icon_64()
@@ -89,17 +101,18 @@ frame_3 = tkinter.LabelFrame(root)
 frame_3.pack(padx=10, pady=10, fill='both', expand=True)
 
 frame_3.rowconfigure(0, weight=1)
-frame_3.rowconfigure(1, weight=1)
 frame_3.columnconfigure(0, weight=1)
 frame_3.columnconfigure(1, weight=1)
+frame_3.columnconfigure(2, weight=1)
 
-office_button = tkinter.Checkbutton(frame_3, text='Office', command=lambda: choosetype('Office'), padx=37, pady=5,cursor="hand2")
+office_button = tkinter.Checkbutton(frame_3, text='Office', command=lambda: choosetype('Office'), padx=15, pady=5,cursor="hand2")
 office_button.grid(column=0, row=0, padx=(10, 5), pady=5, sticky='news', columnspan=1)
 
-residence_button = tkinter.Checkbutton(frame_3, text='Residence', command=lambda: choosetype('Residence'), padx=37, pady=5,cursor="hand2")
+residence_button = tkinter.Checkbutton(frame_3, text='Residence', command=lambda: choosetype('Residence'), padx=15, pady=5,cursor="hand2")
 residence_button.grid(column=1, row=0, padx=(5, 10), pady=5, sticky='news', columnspan=1)
 
-
+hotel_button = tkinter.Checkbutton(frame_3, text='Hotel', command=lambda: choosetype('Hotel'), padx=15, pady=5,cursor="hand2")
+hotel_button.grid(column=2, row=0, padx=(5, 10), pady=5, sticky='news', columnspan=1)
 
 frame_2 = tkinter.LabelFrame(root)
 frame_2.pack(padx=10, pady=10, fill='both', expand=True)
@@ -112,7 +125,7 @@ frame_2.columnconfigure(2, weight=1)
 frame_2.columnconfigure(3, weight=1)
 
 run_button = tkinter.Button(frame_2, text='Run', command=lambda: button_click(buildingtype,1), padx=10, pady=5,cursor="hand2")
-run_button.grid(column=0, row=0, padx=(10, 5), pady=5, sticky='news', columnspan=1)
+run_button.grid(column=0, row=0, padx=(10, 5), pady=5, sticky='news', columnspan=2)
 run_morning=tkinter.Button(frame_2, text='Run \n morning \n only', command=lambda: button_click(buildingtype,0), padx=0, pady=5,cursor="hand2")
 
 exit_button = tkinter.Button(frame_2, text='Exit', command=root.destroy, padx=10, pady=5,cursor="hand2")
