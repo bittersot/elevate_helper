@@ -14,43 +14,31 @@ from xml.dom import minidom
 
 import csv
 
-def main(n_copy, path) -> None:
+def main(n_copy, path, buildingtype, morningflag) -> None:
     #n_copy=3
-    #path=r'C:\Users\Pavel\Desktop\elevate_in\TEST\K21'
-
-    file = os.listdir(path)
+    #path = r'C:\Users\ALesnichiy\Desktop\elevate\testele'
+    print(path)
     n_copy = int(n_copy)
-
-    for i in range(2, n_copy + 1):
-        if i < 10:
-            shutil.copyfile(path + '\\' + file[0], path + '\\' + file[0][:-6] + str(i) + '.elvx')
-        else:
-            shutil.copyfile(path + '\\' + file[0], path + '\\' + file[0][:-7] + str(i) + '.elvx')
-       
-        file = os.listdir(path)
-        modify_handling_capacity(path + '\\' + file[i-1], i)
+    try:
+        makecopiesandrun(buildingtype, path, n_copy,morningflag) 
+    except:
+        print("Error in makecopiesandrun")
+    if buildingtype == "Office":
+        try:
+            if morningflag == 1:
+                get_area(path + "//" + "lunch")
+            get_area(path + "//" + "morning")
+        except:
+            print("Error in get_area")
+    else:
+        try:
+            get_area(path)
+        except:
+            print("Error in get_area")
     
-    get_area(path)
 
-    os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
-    time.sleep(3.0)
-    py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
-    keyboard.press_and_release('alt + a')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('down arrow')
-    keyboard.press_and_release('enter')
-    time.sleep(0.5)
-    keyboard.press_and_release('tab')
-    keyboard.press_and_release('tab')
-    keyboard.press_and_release('tab')
-    time.sleep(0.5)
-    keyboard.press_and_release('ctrl + v')
-    keyboard.press_and_release('enter')
 
-def print_repot(path) -> None:
+def print_report(path) -> None:
         
     excel_app = win32com.client.Dispatch("Excel.Application")
     #excel_app.WindowState = -4137
@@ -98,6 +86,70 @@ def modify_handling_capacity(xml_file, new_capacity):
     with open(xml_file, 'w', encoding='utf-8') as f:
         f.write(pretty_xml)
 
+def modify_buildingtype_office(xml_file, peak) -> None:
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    data_traffic = root.find('.//PassengerData/Traffic')
+    if data_traffic is not None:
+        data_periods = data_traffic.findall('Period')
+        for data_period in data_periods:
+            if data_period.get('Id') == '0':
+                if peak == 'Morning':
+                    data_period.set('SplitUp', "100")
+                    data_period.set('SplitDown',"0")
+                    data_period.set('SplitInterfloor',"0")
+                elif peak == 'Lunch':
+                    data_period.set('SplitUp', "45")
+                    data_period.set('SplitDown',"45")
+                    data_period.set('SplitInterfloor',"10")
+                else: 
+                    print('Unknown peak')
+
+    xml_str = ET.tostring(root, encoding='utf-8')
+    pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
+    
+    with open(xml_file, 'w', encoding='utf-8') as f:
+        f.write(pretty_xml)
+
+def modify_buildingtype_residence(xml_file, buildingtype) -> None:
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    data_traffic = root.find('.//PassengerData/Traffic')
+    if data_traffic is not None:
+        data_periods = data_traffic.findall('Period')
+        for data_period in data_periods:
+            if data_period.get('Id') == '0':
+                data_period.set('SplitUp',"50")
+                data_period.set('SplitDown',"50")
+                data_period.set('SplitInterfloor',"0")
+
+    xml_str = ET.tostring(root, encoding='utf-8')
+    pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
+    
+    with open(xml_file, 'w', encoding='utf-8') as f:
+        f.write(pretty_xml) 
+
+def modifytitle(xml_file,peak) -> None:
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    data_job = root.find('.//JobData')
+    if data_job is not None:
+        if peak == 'Lunch':
+            mod_data_job = str(data_job.get('JobTitle')) + " (обеденный пик)"
+        else:
+             mod_data_job = str(data_job.get('JobTitle')) + " (утренний пик)"
+        data_job.set('JobTitle', mod_data_job)
+
+
+    xml_str = ET.tostring(root, encoding='utf-8')
+    pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
+    
+    with open(xml_file, 'w', encoding='utf-8') as f:
+        f.write(pretty_xml)
+
 def get_area(path) -> None:
 
     xml_file = path + '\\' + os.listdir(path)[0]
@@ -120,7 +172,7 @@ def get_area(path) -> None:
                 'FloorAreaM2' : floor_area
             })
 
-    # Write CSV
+    #Write CSV
     if data:
         fieldnames = ['CarId', 'FloorAreaM2']
 
@@ -129,5 +181,111 @@ def get_area(path) -> None:
             writer.writeheader()
             writer.writerows(data)
 
-if __name__ == '__main__':
-    main()
+def resedencerun(path) -> None:
+    os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
+    time.sleep(1.5)
+    py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
+    keyboard.press_and_release('alt + a')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('enter')
+    time.sleep(0.5)
+    keyboard.press_and_release('tab')
+    keyboard.press_and_release('tab')
+    keyboard.press_and_release('tab')
+    time.sleep(0.5)
+    #keyboard.press_and_release('ctrl + v')
+    keyboard.write(path)
+    keyboard.press_and_release('enter')
+    print("Residence launched")
+
+def officerun(path,morningflag) -> None:
+    os.startfile(r'C:\Program Files (x86)\Elevate 9\Elevate.exe')
+    time.sleep(1.5)
+    py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
+    keyboard.press_and_release('alt + a')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('down arrow')
+    keyboard.press_and_release('enter')
+    time.sleep(0.5)
+    keyboard.press_and_release('tab')
+    keyboard.press_and_release('tab')
+    keyboard.press_and_release('tab')
+    time.sleep(0.5)
+    #keyboard.press_and_release('ctrl + v')
+    keyboard.write(path + '\\' + 'morning')
+    keyboard.press_and_release('enter')
+    print("Morning launched")
+    if morningflag == 1:
+        time.sleep(1.5)
+        py_win_keyboard_layout.change_foreground_window_keyboard_layout(0x04090409)
+        keyboard.press_and_release('alt + a')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('down arrow')
+        keyboard.press_and_release('enter')
+        time.sleep(0.5)
+        keyboard.press_and_release('tab')
+        keyboard.press_and_release('tab')
+        keyboard.press_and_release('tab')
+        time.sleep(0.5)
+        #keyboard.press_and_release('ctrl + v')
+        keyboard.write(path + '\\' + 'lunch')
+        keyboard.press_and_release('enter')
+        print("Lunch launched")
+
+def makecopiesandrun(buildingtype, path, n_copy, morningflag) -> None:
+    file = os.listdir(path)
+    lunchpath = ''
+    morningpath = ''
+    
+    if buildingtype == 'Residence' or buildingtype == 'Hotel':
+        modify_buildingtype_residence(path + '\\' + file[0],buildingtype) 
+        for i in range(2, n_copy + 1):
+            if i < 10:
+                shutil.copyfile(path + '\\' + file[0], path + '\\' + file[0][:-6] + str(i) + '.elvx')
+            else:
+                shutil.copyfile(path + '\\' + file[0], path + '\\' + file[0][:-7] + str(i) + '.elvx')
+            file = os.listdir(path)
+            modify_handling_capacity(path + '\\' + file[i-1], i)
+        resedencerun(path)
+
+    elif buildingtype == 'Office':
+        morningpath = path + '\\' + 'morning'
+        os.makedirs(morningpath)
+        shutil.copyfile(path + '\\' + file[0], morningpath + '\\' + file[0])
+        if morningflag == 1:
+            lunchpath = path + '\\' + 'lunch'
+            os.makedirs(lunchpath)
+            shutil.copyfile(path + '\\' + file[0], lunchpath + '\\' + file[0])
+            modify_buildingtype_office(lunchpath + '\\' + file[0],'Lunch')  
+            modifytitle(lunchpath + '\\' + file[0],"Lunch")
+        modify_buildingtype_office(morningpath + '\\' + file[0],'Morning') 
+        modifytitle(morningpath + '\\' + file[0],"Morning")
+        for i in range(2, n_copy + 1):
+            if i < 10:
+                shutil.copyfile(morningpath + '\\' + file[0], morningpath + '\\' + file[0][:-6] + str(i) + '.elvx')
+                if morningflag == 1:
+                    shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-6] + str(i) + '.elvx')
+            else:
+                shutil.copyfile(morningpath + '\\' + file[0], morningpath + '\\' + file[0][:-7] + str(i) + '.elvx')
+                if morningflag == 1:
+                    shutil.copyfile(lunchpath + '\\' + file[0], lunchpath + '\\' + file[0][:-7] + str(i) + '.elvx')
+            file = os.listdir(morningpath)
+            modify_handling_capacity(morningpath + '\\' + file[i-1], i)
+            if morningflag == 1:
+                file = os.listdir(lunchpath)
+                modify_handling_capacity(lunchpath + '\\' + file[i-1], i) 
+        officerun(path,morningflag) 
+
+    else:
+        print('Unknown building type')
+
